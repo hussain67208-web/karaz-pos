@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  background: #111315;
+  color: white;
+  font-family: "IBM Plex Sans Arabic", sans-serif;
+}
