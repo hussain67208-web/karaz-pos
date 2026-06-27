@@ -1,287 +1,185 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useMemo, useState } from "react";
+
+import TableToolbar from "../components/tables/TableToolbar";
+import TableFilters from "../components/tables/TableFilters";
+import TableCard from "../components/tables/TableCard";
+
+const tablesData = [
+  {
+    id: 1,
+    name: "T1",
+    section: "الصالة الرئيسية",
+    people: 4,
+    orders: 5,
+    time: "00:35",
+    total: 48000,
+    status: "busy",
+    newOrders: 2,
+    callWaiter: false,
+    vip: false,
+  },
+  {
+    id: 2,
+    name: "T2",
+    section: "الصالة الرئيسية",
+    people: 0,
+    orders: 0,
+    time: "--",
+    total: 0,
+    status: "empty",
+    newOrders: 0,
+    callWaiter: false,
+    vip: false,
+  },
+  {
+    id: 3,
+    name: "VIP 1",
+    section: "VIP",
+    people: 5,
+    orders: 9,
+    time: "01:12",
+    total: 137000,
+    status: "payment",
+    newOrders: 1,
+    callWaiter: true,
+    vip: true,
+  },
+  {
+    id: 4,
+    name: "T4",
+    section: "الحديقة",
+    people: 2,
+    orders: 2,
+    time: "00:18",
+    total: 29000,
+    status: "busy",
+    newOrders: 0,
+    callWaiter: false,
+    vip: false,
+  },
+  {
+    id: 5,
+    name: "T5",
+    section: "الحديقة",
+    people: 0,
+    orders: 0,
+    time: "--",
+    total: 0,
+    status: "reserved",
+    newOrders: 0,
+    callWaiter: false,
+    vip: false,
+  },
+  {
+    id: 6,
+    name: "T6",
+    section: "العوائل",
+    people: 0,
+    orders: 0,
+    time: "--",
+    total: 0,
+    status: "cleaning",
+    newOrders: 0,
+    callWaiter: false,
+    vip: false,
+  },
+];
 
 export default function Tables() {
 
-  const [tables, setTables] = useState([]);
-  const [selectedTable, setSelectedTable] = useState(null);
-  const [menu, setMenu] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [tables] = useState(tablesData);
 
-  useEffect(() => {
-    loadTables();
-    loadMenu();
-  }, []);
+  const [search, setSearch] = useState("");
 
-  async function loadTables() {
+  const [selectedSection, setSelectedSection] = useState("all");
 
-    try {
+  const [viewMode, setViewMode] = useState("grid");
 
-      const res = await axios.get("http://localhost:3000/tables");
+  const sections = [
+    { id: "main", name: "الصالة الرئيسية" },
+    { id: "garden", name: "الحديقة" },
+    { id: "vip", name: "VIP" },
+    { id: "family", name: "العوائل" },
+  ];
 
-      setTables(res.data);
+  const filteredTables = useMemo(() => {
 
-    } catch (err) {
+    return tables.filter((table) => {
 
-      console.log(err);
+      const matchSearch =
+        table.name
+          .toLowerCase()
+          .includes(search.toLowerCase());
 
-    }
+      const matchSection =
+        selectedSection === "all" ||
+        table.section ===
+          sections.find(
+            s => s.id === selectedSection
+          )?.name;
 
-    setLoading(false);
+      return matchSearch && matchSection;
 
-  }
+    });
 
-  async function loadMenu() {
+  }, [tables, search, selectedSection]);
 
-    try {
+  const stats = {
+    empty: tables.filter(t => t.status === "empty").length,
+    busy: tables.filter(t => t.status === "busy").length,
+    payment: tables.filter(t => t.status === "payment").length,
+    vip: tables.filter(t => t.vip).length,
+  };
 
-      const res = await axios.get("http://localhost:3000/menu");
+  return (
 
-      setMenu(res.data);
+    <div>
 
-    } catch (err) {
+      <TableToolbar
+        search={search}
+        setSearch={setSearch}
+        sections={sections}
+        selectedSection={selectedSection}
+        setSelectedSection={setSelectedSection}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        onRefresh={() => {}}
+        onAddTable={() => {}}
+      />
 
-      console.log(err);
+      <TableFilters
+        stats={stats}
+      />
 
-    }
+      {viewMode === "grid" ? (
 
-  }
+        <div className="grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 gap-5">
 
-  async function openTable(id){
+          {filteredTables.map((table) => (
 
-    try{
+            <TableCard
+              key={table.id}
+              table={table}
+              onClick={(table) => {
 
-      await axios.post(
-        "http://localhost:3000/table/open",
-        {
-          id
-        }
-      );
+                console.log(table);
 
-      loadTables();
-
-    }catch(err){
-
-      console.log(err);
-
-    }
-
-  }
-
-  async function closeTable(id){
-
-    try{
-
-      await axios.post(
-        "http://localhost:3000/table/close",
-        {
-          id
-        }
-      );
-
-      loadTables();
-
-      setSelectedTable(null);
-
-    }catch(err){
-
-      console.log(err);
-
-    }
-
-  }
-
-  async function addItem(product){
-
-    if(!selectedTable) return;
-
-    try{
-
-      await axios.post(
-        "http://localhost:3000/order/add",
-        {
-
-          table:selectedTable.id,
-
-          product:product.id
-
-        }
-      );
-
-      alert("تمت إضافة الطلب");
-
-    }catch(err){
-
-      console.log(err);
-
-    }
-
-  }
-
-  if(loading){
-
-      return (
-
-    <div style={{padding:"20px"}}>
-
-      <h1>الطاولات</h1>
-
-      <div
-        style={{
-          display:"grid",
-          gridTemplateColumns:"repeat(3,1fr)",
-          gap:"15px"
-        }}
-      >
-
-        {tables.map(table=>(
-
-          <div
-            key={table.id}
-            onClick={()=>setSelectedTable(table)}
-            style={{
-              background:"white",
-              borderRadius:"12px",
-              padding:"20px",
-              cursor:"pointer",
-              boxShadow:"0 0 8px rgba(0,0,0,.08)"
-            }}
-          >
-
-            <h2>{table.name}</h2>
-
-            <p>القسم : {table.section}</p>
-
-            <h3>
-
-              {
-
-                table.status==="empty"
-
-                ?
-
-                "🟢 فارغة"
-
-                :
-
-                "🔴 مشغولة"
-
-              }
-
-            </h3>
-
-            {
-
-              table.status==="empty"
-
-              ?
-
-              <button onClick={(e)=>{
-
-                e.stopPropagation();
-
-                openTable(table.id);
-
-              }}>
-
-                فتح
-
-              </button>
-
-              :
-
-              <button onClick={(e)=>{
-
-                e.stopPropagation();
-
-                closeTable(table.id);
-
-              }}>
-
-                إغلاق
-
-              </button>
-
-            }
-
-          </div>
-
-        ))}
-
-      </div>
-
-      {
-
-        selectedTable && (
-
-          <div
-            style={{
-              marginTop:"30px",
-              background:"white",
-              padding:"20px",
-              borderRadius:"12px"
-            }}
-          >
-
-            <h2>
-
-              طلبات الطاولة {selectedTable.name}
-
-            </h2>
-
-            <hr/>
-
-            <h3>المنيو</h3>
-
-            <div
-              style={{
-                display:"grid",
-                gridTemplateColumns:"repeat(3,1fr)",
-                gap:"10px"
               }}
-            >
+            />
 
-              {
+          ))}
 
-                menu.map(item=>(
+        </div>
 
-                  <button
+      ) : (
 
-                    key={item.id}
+        <div className="bg-[#1B1E24] rounded-3xl border border-zinc-800 h-[650px] flex items-center justify-center text-zinc-500 text-xl">
 
-                    onClick={()=>addItem(item)}
+          Floor Plan قريباً
 
-                    style={{
+        </div>
 
-                      padding:"15px",
-
-                      borderRadius:"10px",
-
-                      cursor:"pointer"
-
-                    }}
-
-                  >
-
-                    <b>{item.name}</b>
-
-                    <br/>
-
-                    {item.price} د.ع
-
-                  </button>
-
-                ))
-
-              }
-
-            </div>
-
-          </div>
-
-        )
-
-      }
+      )}
 
     </div>
 

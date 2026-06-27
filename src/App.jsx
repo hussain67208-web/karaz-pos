@@ -1,148 +1,91 @@
-import { useState } from 'react'
-import Tables from './pages/Tables'
+import { useState } from "react";
 
-export default function App(){
+import Layout from "./layout/Layout";
 
-  const [page,setPage] = useState('dashboard')
+import Dashboard from "./pages/Dashboard";
+import Tables from "./pages/Tables";
+import Cashier from "./pages/Cashier";
+import Menu from "./pages/Menu";
+import Hookah from "./pages/Hookah";
+import Employees from "./pages/Employees";
+import Reports from "./pages/Reports";
+import Settings from "./pages/Settings";
 
-  const [categories] = useState([
+export default function App() {
 
-    {
-      id:1,
-      name:'☕ مشروبات ساخنة'
-    },
+  const [page, setPage] = useState("dashboard");
 
-    {
-      id:2,
-      name:'🥤 مشروبات باردة'
-    },
+  function EmptyPage({ title }) {
+    return (
+      <div className="text-white">
+        <h1 className="text-4xl font-bold mb-3">{title}</h1>
+        <p className="text-zinc-400">
+          سيتم بناء هذه الصفحة قريباً.
+        </p>
+      </div>
+    );
+  }
 
-    {
-      id:3,
-      name:'🍒 أراكيل'
-    },
+  function renderPage() {
 
-    {
-      id:4,
-      name:'🍰 حلويات'
-    },
+    switch (page) {
 
-    {
-      id:5,
-      name:'🍟 مأكولات'
-    },
+      case "dashboard":
+        return <Dashboard />;
 
-    {
-      id:6,
-      name:'🎮 ألعاب'
+      case "tables":
+        return <Tables />;
+
+      case "cashier":
+        return <Cashier />;
+
+      case "bar":
+        return <Menu />;
+
+      case "kitchen":
+        return <EmptyPage title="👨‍🍳 المطبخ" />;
+
+      case "hookah":
+        return <Hookah />;
+
+      case "games":
+        return <EmptyPage title="🎮 الألعاب" />;
+
+      case "qrmenu":
+        return <EmptyPage title="📱 المنيو الإلكتروني" />;
+
+      case "inventory":
+        return <EmptyPage title="📦 المخزن" />;
+
+      case "accounts":
+        return <EmptyPage title="💰 الحسابات" />;
+
+      case "employees":
+        return <Employees />;
+
+      case "reports":
+        return <Reports />;
+
+      case "messages":
+        return <EmptyPage title="💬 الرسائل وواتساب" />;
+
+      case "settings":
+        return <Settings />;
+
+      default:
+        return <Dashboard />;
+
     }
 
-  ])
+  }
 
-  return(
-
-    <div
-      style={{
-        display:'flex',
-        height:'100vh',
-        fontFamily:'Arial'
-      }}
+  return (
+    <Layout
+      page={page}
+      setPage={setPage}
     >
-
-      <div
-        style={{
-          width:'250px',
-          background:'#1b1b1b',
-          color:'white',
-          padding:'20px'
-        }}
-      >
-
-        <h2>كرز 🍒</h2>
-
-        <div
-          style={{padding:'12px',cursor:'pointer'}}
-          onClick={()=>setPage('dashboard')}
-        >
-          Dashboard
-        </div>
-
-        <div
-          style={{padding:'12px',cursor:'pointer'}}
-          onClick={()=>setPage('tables')}
-        >
-          الطاولات
-        </div>
-
-        <div
-          style={{padding:'12px',cursor:'pointer'}}
-          onClick={()=>setPage('menu')}
-        >
-          المنيو
-        </div>
-
-      </div>
-
-      <div
-        style={{
-          flex:1,
-          padding:'25px',
-          background:'#f5f5f5'
-        }}
-      >
-
-        {
-
-          page === 'dashboard'
-
-          ?
-
-          <h1>Dashboard</h1>
-
-          :
-
-          page === 'tables'
-
-          ?
-
-          <Tables />
-
-          :
-
-          <div>
-
-            <h1>الأقسام</h1>
-
-            {
-
-              categories.map(category=>(
-
-                <div
-                  key={category.id}
-                  style={{
-                    background:'white',
-                    marginBottom:'15px',
-                    padding:'20px',
-                    borderRadius:'10px'
-                  }}
-                >
-
-                  {category.name}
-
-                </div>
-
-              ))
-
-            }
-
-          </div>
-
-        }
-
-      </div>
-
-    </div>
-
-  )
+      {renderPage()}
+    </Layout>
+  );
 
 }
