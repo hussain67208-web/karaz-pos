@@ -3,91 +3,13 @@ import { useMemo, useState } from "react";
 import TableToolbar from "../components/tables/TableToolbar";
 import TableFilters from "../components/tables/TableFilters";
 import TableCard from "../components/tables/TableCard";
+import TableDrawer from "../components/tables/TableDrawer";
 
-const tablesData = [
-  {
-    id: 1,
-    name: "T1",
-    section: "الصالة الرئيسية",
-    people: 4,
-    orders: 5,
-    time: "00:35",
-    total: 48000,
-    status: "busy",
-    newOrders: 2,
-    callWaiter: false,
-    vip: false,
-  },
-  {
-    id: 2,
-    name: "T2",
-    section: "الصالة الرئيسية",
-    people: 0,
-    orders: 0,
-    time: "--",
-    total: 0,
-    status: "empty",
-    newOrders: 0,
-    callWaiter: false,
-    vip: false,
-  },
-  {
-    id: 3,
-    name: "VIP 1",
-    section: "VIP",
-    people: 5,
-    orders: 9,
-    time: "01:12",
-    total: 137000,
-    status: "payment",
-    newOrders: 1,
-    callWaiter: true,
-    vip: true,
-  },
-  {
-    id: 4,
-    name: "T4",
-    section: "الحديقة",
-    people: 2,
-    orders: 2,
-    time: "00:18",
-    total: 29000,
-    status: "busy",
-    newOrders: 0,
-    callWaiter: false,
-    vip: false,
-  },
-  {
-    id: 5,
-    name: "T5",
-    section: "الحديقة",
-    people: 0,
-    orders: 0,
-    time: "--",
-    total: 0,
-    status: "reserved",
-    newOrders: 0,
-    callWaiter: false,
-    vip: false,
-  },
-  {
-    id: 6,
-    name: "T6",
-    section: "العوائل",
-    people: 0,
-    orders: 0,
-    time: "--",
-    total: 0,
-    status: "cleaning",
-    newOrders: 0,
-    callWaiter: false,
-    vip: false,
-  },
-];
+import { useTableStore } from "../store/tableStore";
 
 export default function Tables() {
 
-  const [tables] = useState(tablesData);
+const tables = useTableStore((state) => state.tables);
 
   const [search, setSearch] = useState("");
 
@@ -95,40 +17,100 @@ export default function Tables() {
 
   const [viewMode, setViewMode] = useState("grid");
 
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const [selectedTable, setSelectedTable] = useState(null);
+
   const sections = [
-    { id: "main", name: "الصالة الرئيسية" },
-    { id: "garden", name: "الحديقة" },
-    { id: "vip", name: "VIP" },
-    { id: "family", name: "العوائل" },
+
+    {
+
+      id: "main",
+
+      name: "الصالة الرئيسية",
+
+    },
+
+    {
+
+      id: "garden",
+
+      name: "الحديقة",
+
+    },
+
+    {
+
+      id: "vip",
+
+      name: "VIP",
+
+    },
+
   ];
 
   const filteredTables = useMemo(() => {
 
-    return tables.filter((table) => {
+    return tables.filter(table => {
 
-      const matchSearch =
-        table.name
-          .toLowerCase()
-          .includes(search.toLowerCase());
+      const searchMatch = table.name
+        .toLowerCase()
+        .includes(search.toLowerCase());
 
-      const matchSection =
-        selectedSection === "all" ||
+      const sectionMatch =
+
+        selectedSection === "all"
+
+        ||
+
         table.section ===
-          sections.find(
-            s => s.id === selectedSection
-          )?.name;
 
-      return matchSearch && matchSection;
+        sections.find(
+
+          s => s.id === selectedSection
+
+        )?.name;
+
+      return searchMatch && sectionMatch;
 
     });
 
-  }, [tables, search, selectedSection]);
+  }, [
+
+    tables,
+
+    search,
+
+    selectedSection,
+
+  ]);
 
   const stats = {
-    empty: tables.filter(t => t.status === "empty").length,
-    busy: tables.filter(t => t.status === "busy").length,
-    payment: tables.filter(t => t.status === "payment").length,
-    vip: tables.filter(t => t.vip).length,
+
+    empty: tables.filter(
+
+      t => t.status === "empty"
+
+    ).length,
+
+    busy: tables.filter(
+
+      t => t.status === "busy"
+
+    ).length,
+
+    payment: tables.filter(
+
+      t => t.status === "payment"
+
+    ).length,
+
+    vip: tables.filter(
+
+      t => t.vip
+
+    ).length,
+
   };
 
   return (
@@ -136,50 +118,62 @@ export default function Tables() {
     <div>
 
       <TableToolbar
+
         search={search}
+
         setSearch={setSearch}
+
         sections={sections}
+
         selectedSection={selectedSection}
+
         setSelectedSection={setSelectedSection}
+
         viewMode={viewMode}
+
         setViewMode={setViewMode}
+
         onRefresh={() => {}}
+
         onAddTable={() => {}}
+
       />
 
-      <TableFilters
-        stats={stats}
+      <TableFilters stats={stats} />
+
+      <div className="grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 gap-5">
+
+        {filteredTables.map(table => (
+
+          <TableCard
+
+            key={table.id}
+
+            table={table}
+
+            onClick={() => {
+
+              setSelectedTable(table);
+
+              setDrawerOpen(true);
+
+            }}
+
+          />
+
+        ))}
+
+      </div>
+
+      <TableDrawer
+
+        open={drawerOpen}
+
+        table={selectedTable}
+
+        onClose={() => setDrawerOpen(false)}
+
       />
-
-      {viewMode === "grid" ? (
-
-        <div className="grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 gap-5">
-
-          {filteredTables.map((table) => (
-
-            <TableCard
-              key={table.id}
-              table={table}
-              onClick={(table) => {
-
-                console.log(table);
-
-              }}
-            />
-
-          ))}
-
-        </div>
-
-      ) : (
-
-        <div className="bg-[#1B1E24] rounded-3xl border border-zinc-800 h-[650px] flex items-center justify-center text-zinc-500 text-xl">
-
-          Floor Plan قريباً
-
-        </div>
-
-      )}
 
     </div>
 

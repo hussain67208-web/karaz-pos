@@ -130,11 +130,11 @@ export default function TableCard({
 
           </span>
 
-          <strong>
+         <strong>
 
-            {table.orders}
+  {table.orders?.length || 0}
 
-          </strong>
+</strong>
 
         </div>
 
