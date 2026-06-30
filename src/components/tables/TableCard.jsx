@@ -130,10 +130,8 @@ export default function TableCard({
 
           </span>
 
-         <strong>
-
-  {table.orders?.length || 0}
-
+        <strong>
+  {table.orders.reduce((sum, item) => sum + item.qty, 0)}
 </strong>
 
         </div>
@@ -168,7 +166,7 @@ export default function TableCard({
 
         <div className="text-2xl text-white font-bold mt-1">
 
-          {table.total.toLocaleString()} د.ع
+          {(table.total || 0).toLocaleString()} د.ع
 
         </div>
 

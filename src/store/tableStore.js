@@ -1,20 +1,42 @@
 import { create } from "zustand";
 import tablesData from "../data/tables";
 
+const calculateTotal = (orders) => {
+
+  return orders.reduce(
+
+    (total, item) =>
+
+      total + (item.price * item.qty),
+
+    0
+
+  );
+
+};
+
 export const useTableStore = create((set) => ({
 
   tables: tablesData.map((table) => ({
+
     ...table,
+
     orders: table.orders || [],
+
+    total: table.total || 0,
+
+    status: table.status || "empty",
+
   })),
 
   selectedTable: null,
 
   selectTable: (table) =>
     set({
-      selectedTable: table,
-    }),
 
+      selectedTable: table,
+
+    }),
   addProduct: (tableId, product) =>
     set((state) => ({
 
@@ -22,30 +44,31 @@ export const useTableStore = create((set) => ({
 
         if (table.id !== tableId) return table;
 
-        const found = table.orders.find(
+        const orders = [...table.orders];
+
+        const index = orders.findIndex(
           (item) => item.id === product.id
         );
 
-        if (found) {
+        if (index >= 0) {
 
-          return {
+          orders[index] = {
 
-            ...table,
+            ...orders[index],
 
-            orders: table.orders.map((item) =>
-
-              item.id === product.id
-
-                ? {
-                    ...item,
-                    qty: item.qty + 1,
-                  }
-
-                : item
-
-            ),
+            qty: orders[index].qty + 1,
 
           };
+
+        } else {
+
+          orders.push({
+
+            ...product,
+
+            qty: 1,
+
+          });
 
         }
 
@@ -53,25 +76,19 @@ export const useTableStore = create((set) => ({
 
           ...table,
 
-          orders: [
+          status: "busy",
 
-            ...table.orders,
+          orders,
 
-            {
-
-              ...product,
-
-              qty: 1,
-
-            },
-
-          ],
+          total: calculateTotal(orders),
 
         };
 
       }),
 
     })),
+
+
 
   increaseQty: (tableId, productId) =>
     set((state) => ({
@@ -80,29 +97,35 @@ export const useTableStore = create((set) => ({
 
         if (table.id !== tableId) return table;
 
+        const orders = table.orders.map((item) =>
+
+          item.id === productId
+
+            ? {
+
+                ...item,
+
+                qty: item.qty + 1,
+
+              }
+
+            : item
+
+        );
+
         return {
 
           ...table,
 
-          orders: table.orders.map((item) =>
+          orders,
 
-            item.id === productId
-
-              ? {
-                  ...item,
-                  qty: item.qty + 1,
-                }
-
-              : item
-
-          ),
+          total: calculateTotal(orders),
 
         };
 
       }),
 
     })),
-
   decreaseQty: (tableId, productId) =>
     set((state) => ({
 
@@ -110,30 +133,36 @@ export const useTableStore = create((set) => ({
 
         if (table.id !== tableId) return table;
 
+        const orders = table.orders
+          .map((item) =>
+
+            item.id === productId
+              ? {
+                  ...item,
+                  qty: item.qty - 1,
+                }
+              : item
+
+          )
+          .filter((item) => item.qty > 0);
+
         return {
 
           ...table,
 
-          orders: table.orders
-            .map((item) =>
+          orders,
 
-              item.id === productId
+          total: calculateTotal(orders),
 
-                ? {
-                    ...item,
-                    qty: item.qty - 1,
-                  }
-
-                : item
-
-            )
-            .filter((item) => item.qty > 0),
+          status: orders.length === 0 ? "empty" : "busy",
 
         };
 
       }),
 
     })),
+
+
 
   removeOrder: (tableId, productId) =>
     set((state) => ({
@@ -142,13 +171,19 @@ export const useTableStore = create((set) => ({
 
         if (table.id !== tableId) return table;
 
+        const orders = table.orders.filter(
+          (item) => item.id !== productId
+        );
+
         return {
 
           ...table,
 
-          orders: table.orders.filter(
-            (item) => item.id !== productId
-          ),
+          orders,
+
+          total: calculateTotal(orders),
+
+          status: orders.length === 0 ? "empty" : "busy",
 
         };
 
